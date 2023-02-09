@@ -7,6 +7,10 @@ var mongoose = require('mongoose')
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var mainRouter = require('./routes/main');
+var privateRouter = require('./routes/private');
+
+const session = require('express-session');
 
 var app = express();
 
@@ -20,8 +24,26 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(
+  session({
+    secret: process.env.SESS_SECRET,
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 600000 // 60 * 1000 ms === 1 min
+    },
+
+  })
+);
+
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/main', mainRouter);
+app.use('/private', privateRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
